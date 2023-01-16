@@ -40,3 +40,32 @@ pipeline {
         
     }
 }
+
+
+
+
+
+
+###For dynamic version change use below code and u should chane version number in pom file and install pipline utility in jenkins "" cote will be addes
+ stage('Nexus Uplaod') {
+            steps {
+            script{
+                def mavenPom = readMavenPom file: 'pom.xml'
+                nexusArtifactUploader artifacts: [
+                    [
+                        artifactId: 'demo',
+                        classifier: '', 
+                        file: "target/demo-${mavenPom.version}.jar",
+                        type: 'jar'
+                        ]
+                        ], 
+                        credentialsId: 'nexuspass', 
+                        groupId: 'com.example', 
+                        nexusUrl: '65.2.73.151:8081', 
+                        nexusVersion: 'nexus3', 
+                        protocol: 'http', 
+                        repository: 'simpleapp-release', 
+                        version: "${mavenPom.version}"
+                 }
+        }
+}
