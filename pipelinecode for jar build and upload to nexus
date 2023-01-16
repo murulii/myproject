@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+    tools { 
+        maven 'maven 3.8.7' 
+    }
+    stages {
+        stage('git clone') {
+            steps {
+                git branch: 'main', url: 'https://github.com/murulii/JenkinsMavenProject'
+            }
+        }
+        
+        
+        stage('maven build') {
+            steps {
+                sh 'mvn clean package'  
+            }
+        }
+        
+         stage('Nexus Uplaod') {
+            steps {
+                nexusArtifactUploader artifacts: [
+                    [
+                        artifactId: 'demo',
+                        classifier: '', 
+                        file: 'target/demo-0.0.1.jar',
+                        type: 'jar'
+                        ]
+                        ], 
+                        credentialsId: 'nexuspass', 
+                        groupId: 'com.example', 
+                        nexusUrl: '65.2.73.151:8081', 
+                        nexusVersion: 'nexus3', 
+                        protocol: 'http', 
+                        repository: 'simpleapp-release', 
+                        version: '0.0.1'
+                 }
+        }
+        
+        
+    }
+}
