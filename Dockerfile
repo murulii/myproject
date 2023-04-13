@@ -1,15 +1,24 @@
-# Use a base image with Java installed
-FROM openjdk:8-jdk-alpine
 
-# Set the working directory
-WORKDIR /app
+FROM adoptopenjdk/openjdk11:alpine-slim as build
+WORKDIR /workspace/app
 
-# Copy the JAR file to the container
-COPY target/myapp.jar .
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+COPY src src
 
-# Expose the port on which the application will run
-EXPOSE 8080
+RUN ./mvnw install -DskipTests
+RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
-# Start the application
-CMD ["java", "-jar", "myapp.jar"]
+FROM adoptopenjdk/openjdk11:alpine-slim
+VOLUME /tmp
+ARG DEPENDENCY=/workspace/app/target/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+EXPOSE 80
+ENTRYPOINT ["java","-Dserver.port=${PORT}","-cp","app:app/lib/*","com.example.demo.DemoApplication"]
+
+
+
 
